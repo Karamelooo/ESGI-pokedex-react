@@ -25,7 +25,11 @@ interface FetchParams {
   name?: string;
 }
 
-const Main: React.FC = () => {
+interface MainProps {
+  onPokemonSelect: (id: number) => void;
+}
+
+const Main: React.FC<MainProps> = ({ onPokemonSelect }) => {
   const [pokemons, setPokemons] = useState<Pokemon[]>([]);
   const [types, setTypes] = useState<PokemonType[]>([]);
   const [loading, setLoading] = useState(true);
@@ -248,6 +252,7 @@ const Main: React.FC = () => {
                 key={pokemon.id} 
                 ref={isSearchMode() ? undefined : (isLastItem ? lastPokemonRef : undefined)}
                 className="pokemon-card"
+                onClick={() => onPokemonSelect(pokemon.id)}
               >
                 <img src={pokemon.image} alt={pokemon.name}/>
                 <h3 className="pokemon-name">{pokemon.name}</h3>
