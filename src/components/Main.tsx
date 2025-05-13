@@ -31,7 +31,7 @@ const Main: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchName, setSearchName] = useState('');
-  const [selectedType, setSelectedType] = useState<number | ''>('');
+  const [selectedTypes, setSelectedTypes] = useState<number[]>([]);
   const [params, setParams] = useState<FetchParams>({
     page: 1,
     limit: 50
@@ -42,7 +42,7 @@ const Main: React.FC = () => {
   
   const isSearchMode = () => {
     return (params.name !== undefined && params.name !== '') || 
-           (params.typeId !== undefined);
+           (params.types !== undefined && params.types.length > 0);
   };
   
   const lastPokemonRef = useCallback((node: HTMLDivElement) => {
@@ -57,7 +57,7 @@ const Main: React.FC = () => {
     });
     
     if (node) observer.current.observe(node);
-  }, [loading, hasMore, params.name, params.typeId]);
+  }, [loading, hasMore, params.name, params.types]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -86,23 +86,32 @@ const Main: React.FC = () => {
     }, 500);
   };
 
-  const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    setSelectedType(value === '' ? '' : parseInt(value));
+  const handleTypeToggle = (typeId: number) => {
+    const isSelected = selectedTypes.includes(typeId);
+    
+    let newSelectedTypes: number[];
+    if (isSelected) {
+      newSelectedTypes = selectedTypes.filter(id => id !== typeId);
+    }
+    else {
+      newSelectedTypes = [...selectedTypes, typeId];
+    }
+    
+    setSelectedTypes(newSelectedTypes);
     
     setParams(prev => {
       const newParams = { ...prev, page: 1 };
       
-      if (value === '') {
-        delete newParams.typeId;
+      if (newSelectedTypes.length === 0) {
+        delete newParams.types;
       } else {
-        newParams.typeId = parseInt(value);
+        newParams.types = newSelectedTypes;
       }
       
       return newParams;
     });
     
-    setHasMore(value === '');
+    setHasMore(newSelectedTypes.length === 0);
   };
 
   const buildUrl = (params: FetchParams) => {
@@ -117,7 +126,7 @@ const Main: React.FC = () => {
     
     if (params.types && params.types.length > 0) {
       params.types.forEach(typeId => {
-        url.searchParams.append('types', typeId.toString());
+        url.searchParams.append('types[]', typeId.toString());
       });
     }
     
@@ -191,28 +200,38 @@ const Main: React.FC = () => {
               className="search-input"
             />
           </div>
-          
-          <div className="type-filter">
-            <select 
-              value={selectedType} 
-              onChange={handleTypeChange}
-              className="type-select"
-            >
-              <option value="">Tous les types</option>
-              {types.map(type => (
-                <option key={type.id} value={type.id}>
-                  {type.name}
-                </option>
-              ))}
-            </select>
+        </div>
+        
+        <div className="types-filter">
+          <h4 className="types-title">Filtrer par types :</h4>
+          <div className="types-buttons">
+            {types.map(type => (
+              <button
+                key={type.id}
+                className={`type-button ${selectedTypes.includes(type.id) ? 'selected' : ''}`}
+                onClick={() => handleTypeToggle(type.id)}
+              >
+                <img 
+                  src={type.image} 
+                  alt={type.name} 
+                  className="type-button-icon" 
+                />
+                <span>{type.name}</span>
+              </button>
+            ))}
           </div>
         </div>
         
         {isSearchMode() && (
           <div className="search-info">
             {params.name && <span>Nom : {params.name}</span>}
-            {params.typeId && types.length > 0 && (
-              <span>Type : {types.find(t => t.id === params.typeId)?.name}</span>
+            {params.types && params.types.length > 0 && (
+              <span>
+                Types : {params.types.map(typeId => {
+                  const typeName = types.find(t => t.id === typeId)?.name;
+                  return typeName;
+                }).join(', ')}
+              </span>
             )}
           </div>
         )}
@@ -231,8 +250,8 @@ const Main: React.FC = () => {
                 className="pokemon-card"
               >
                 <img src={pokemon.image} alt={pokemon.name}/>
-                <h3>{pokemon.name}</h3>
-                <h4>#{pokemon.id}</h4>
+                <h3 className="pokemon-name">{pokemon.name}</h3>
+                <h4 className="pokemon-id">#{pokemon.id}</h4>
                 <div className="pokemon-types">
                   {pokemon.types && pokemon.types.map((type) => (
                     <div key={type.id} className="pokemon-type">

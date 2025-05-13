@@ -269,3 +269,51 @@
   color: #666;
 }
 
+.types-filter {
+  margin: 1rem 0;
+}
+
+.types-title {
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  color: #333;
+  font-weight: normal;
+}
+
+.types-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.type-button {
+  display: flex;
+  align-items: center;
+  background-color: #f2f2f2;
+  padding: 0.4rem 0.8rem;
+  border-radius: 2rem;
+  font-size: 0.85rem;
+  color: #333;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.type-button:hover {
+  background-color: #e8e8e8;
+  transform: translateY(-2px);
+}
+
+.type-button.selected {
+  background-color: #e3350d;
+  color: white;
+  border-color: #e3350d;
+}
+
+.type-button-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 0.5rem;
+}
+
