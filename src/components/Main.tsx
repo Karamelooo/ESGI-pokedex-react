@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 
 interface Pokemon {
   id: number;
@@ -11,52 +11,176 @@ interface Pokemon {
   }[];
 }
 
+interface FetchParams {
+  page: number;
+  limit: number;
+  typeId?: number;
+  types?: number[];
+  name?: string;
+}
+
 const Main: React.FC = () => {
   const [pokemons, setPokemons] = useState<Pokemon[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchName, setSearchName] = useState('');
+  const [params, setParams] = useState<FetchParams>({
+    page: 1,
+    limit: 50
+  });
+  const [hasMore, setHasMore] = useState(true);
+  const observer = useRef<IntersectionObserver | null>(null);
+  const searchTimeout = useRef<number | null>(null);
+  
+  const isSearchMode = () => {
+    return params.name !== undefined && params.name !== '';
+  };
+  
+  const lastPokemonRef = useCallback((node: HTMLDivElement) => {
+    if (loading || isSearchMode()) return;
+    
+    if (observer.current) observer.current.disconnect();
+    
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        setParams(prev => ({ ...prev, page: prev.page + 1 }));
+      }
+    });
+    
+    if (node) observer.current.observe(node);
+  }, [loading, hasMore, params.name]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchName(value);
+    
+    if (searchTimeout.current) {
+      clearTimeout(searchTimeout.current);
+    }
+    
+    searchTimeout.current = setTimeout(() => {
+      if (value === '') {
+        setParams(prev => {
+          const newParams = { ...prev, page: 1 };
+          delete newParams.name;
+          return newParams;
+        });
+      } else {
+        setParams(prev => ({
+          ...prev,
+          page: 1,
+          name: value,
+          limit: 150
+        }));
+      }
+      setHasMore(!value);
+    }, 500);
+  };
+
+  const buildUrl = (params: FetchParams) => {
+    const url = new URL('https://nestjs-pokedex-api.vercel.app/pokemons');
+    
+    url.searchParams.append('page', params.page.toString());
+    url.searchParams.append('limit', params.limit.toString());
+    
+    if (params.typeId) {
+      url.searchParams.append('typeId', params.typeId.toString());
+    }
+    
+    if (params.types && params.types.length > 0) {
+      params.types.forEach(typeId => {
+        url.searchParams.append('types', typeId.toString());
+      });
+    }
+    
+    if (params.name) {
+      url.searchParams.append('name', params.name);
+    }
+    
+    return url.toString();
+  };
 
   useEffect(() => {
     const fetchPokemons = async () => {
+      setLoading(true);
       try {
-        const response = await fetch('https://nestjs-pokedex-api.vercel.app/pokemons');
+        const url = buildUrl(params);
+        const response = await fetch(url);
+        
         if (!response.ok) {
           throw new Error('Erreur lors du chargement des données');
         }
+        
         const data = await response.json();
-        setPokemons(data);
-      } catch (err) {
+        
+        if (isSearchMode()) {
+          setPokemons(data);
+        }
+        else {
+          setPokemons(prev => params.page === 1 ? data : [...prev, ...data]);
+        }
+      }
+      catch (err) {
         setError(err instanceof Error ? err.message : 'Une erreur est survenue');
-      } finally {
+      }
+      finally {
         setLoading(false);
       }
     };
 
     fetchPokemons();
-  }, []);
+  }, [params]);
 
-  if (loading) return <div>Chargement...</div>;
   if (error) return <div>Erreur: {error}</div>;
 
   return (
     <div className="pokedexContainer">
-      <div className="pokemonContainer">
-        {pokemons.map((pokemon) => (
-          <div key={pokemon.id}>
-            <img src={pokemon.image} alt={pokemon.name}/>
-            <h3>{pokemon.name}</h3>
-            <h4>#{pokemon.id}</h4>
-            <div className="pokemon-types">
-              {pokemon.types && pokemon.types.map((type) => (
-                <div key={type.id} className="pokemon-type">
-                  <img src={type.image} alt={type.name} className="type-icon" />
-                  <span>{type.name}</span>
-                </div>
-              ))}
-            </div>
+      <div className="search-container">
+        <div className="search-input-wrapper">
+          <input
+            type="text"
+            placeholder="Rechercher un Pokémon..."
+            value={searchName}
+            onChange={handleSearchChange}
+            className="search-input"
+          />
+        </div>
+        {isSearchMode() && (
+          <div className="search-info">
+            Résultats pour "{params.name}"
           </div>
-        ))}
+        )}
       </div>
+      
+      {pokemons.length === 0 && !loading ? (
+        <div className="no-results">Aucun Pokémon trouvé</div>
+      ) : (
+        <div className="pokemonContainer">
+          {pokemons.map((pokemon, index) => {
+            const isLastItem = index === pokemons.length - 1;
+            return (
+              <div 
+                key={pokemon.id} 
+                ref={isSearchMode() ? undefined : (isLastItem ? lastPokemonRef : undefined)}
+                className="pokemon-card"
+              >
+                <img src={pokemon.image} alt={pokemon.name}/>
+                <h3>{pokemon.name}</h3>
+                <h4>#{pokemon.id}</h4>
+                <div className="pokemon-types">
+                  {pokemon.types && pokemon.types.map((type) => (
+                    <div key={type.id} className="pokemon-type">
+                      <img src={type.image} alt={type.name} className="type-icon" />
+                      <span>{type.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      {!isSearchMode() && loading && <div className="loading">Chargement...</div>}
     </div>
   );
 };
