@@ -191,7 +191,7 @@ h1 a:hover {
   position: relative;
 }
 
-.search-input {
+.search-input, .limit-select {
   width: 100%;
   padding: 0.8rem 1.2rem 0.8rem 2.5rem;
   font-size: 1rem;
@@ -202,6 +202,12 @@ h1 a:hover {
   transition: all 0.3s ease;
   outline: none;
 }
+
+.limit-select {
+  width: auto;
+  padding:0.2rem 0.2rem;
+}
+
 
 .search-input:focus {
   border-color: #e3350d;

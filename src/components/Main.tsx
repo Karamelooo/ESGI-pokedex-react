@@ -222,7 +222,7 @@ const Main: React.FC<MainProps> = ({
           <div className="search-input-wrapper">
             <input
               type="text"
-              placeholder="Rechercher un Pokémon..."
+              placeholder="Rechercher un Pokémon par nom"
               value={searchName}
               onChange={handleSearchChange}
               className="search-input"
@@ -230,8 +230,27 @@ const Main: React.FC<MainProps> = ({
           </div>
         </div>
         
+        <div className="limit-selector">
+          <label htmlFor="limit-select">Pokémons par requête : </label>
+          <select 
+            id="limit-select" 
+            value={params.limit}
+            onChange={(e) => {
+              const newLimit = parseInt(e.target.value);
+              const newParams = { ...params, page: 1, limit: newLimit };
+              setParams(newParams);
+              onListStateChange({ params: newParams });
+            }}
+            className="limit-select"
+          >
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </div>
+        
         <div className="types-filter">
-          <h4 className="types-title">Filtrer par types :</h4>
           <div className="types-buttons">
             {types.map(type => (
               <button
