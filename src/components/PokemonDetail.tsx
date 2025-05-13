@@ -50,9 +50,11 @@ const PokemonDetail: React.FC<PokemonDetailProps> = ({ pokemonId, onBack, onEvol
         }
         const data = await response.json();
         setPokemon(data);
-      } catch (err) {
+      }
+      catch (err) {
         setError(err instanceof Error ? err.message : 'Une erreur est survenue');
-      } finally {
+      }
+      finally {
         setLoading(false);
       }
     };
@@ -70,10 +72,12 @@ const PokemonDetail: React.FC<PokemonDetailProps> = ({ pokemonId, onBack, onEvol
       const data = await response.json();
       if (data) {
         onEvolutionSelect(data.id);
-      } else {
+      }
+      else {
         console.error(`Aucun Pokémon trouvé avec le nom: ${evolutionName}`);
       }
-    } catch (err) {
+    }
+    catch (err) {
       console.error('Erreur lors de la recherche de l\'évolution:', err);
     }
   };

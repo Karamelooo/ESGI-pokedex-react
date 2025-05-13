@@ -27,19 +27,32 @@ interface FetchParams {
 
 interface MainProps {
   onPokemonSelect: (id: number) => void;
+  listState: {
+    searchName: string;
+    selectedTypes: number[];
+    params: {
+      page: number;
+      limit: number;
+      types?: number[];
+      name?: string;
+    };
+    scrollPosition: number;
+  };
+  onListStateChange: (newState: Partial<any>) => void;
 }
 
-const Main: React.FC<MainProps> = ({ onPokemonSelect }) => {
+const Main: React.FC<MainProps> = ({ 
+  onPokemonSelect, 
+  listState, 
+  onListStateChange 
+}) => {
   const [pokemons, setPokemons] = useState<Pokemon[]>([]);
   const [types, setTypes] = useState<PokemonType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchName, setSearchName] = useState('');
-  const [selectedTypes, setSelectedTypes] = useState<number[]>([]);
-  const [params, setParams] = useState<FetchParams>({
-    page: 1,
-    limit: 50
-  });
+  const [searchName, setSearchName] = useState(listState.searchName);
+  const [selectedTypes, setSelectedTypes] = useState<number[]>(listState.selectedTypes);
+  const [params, setParams] = useState(listState.params);
   const [hasMore, setHasMore] = useState(true);
   const observer = useRef<IntersectionObserver | null>(null);
   const searchTimeout = useRef<number | null>(null);
@@ -72,21 +85,30 @@ const Main: React.FC<MainProps> = ({ onPokemonSelect }) => {
     }
     
     searchTimeout.current = setTimeout(() => {
+      let newParams;
       if (value === '') {
-        setParams(prev => {
-          const newParams = { ...prev, page: 1 };
-          delete newParams.name;
-          return newParams;
-        });
+        newParams = {
+          ...params,
+          page: 1
+        };
+        delete newParams.name;
       } else {
-        setParams(prev => ({
-          ...prev,
+        newParams = {
+          ...params,
           page: 1,
           name: value,
           limit: 150
-        }));
+        };
       }
+      
+      setParams(newParams);
       setHasMore(!value);
+      
+      // Mettre à jour l'état global
+      onListStateChange({
+        searchName: value,
+        params: newParams
+      });
     }, 500);
   };
 
@@ -96,26 +118,27 @@ const Main: React.FC<MainProps> = ({ onPokemonSelect }) => {
     let newSelectedTypes: number[];
     if (isSelected) {
       newSelectedTypes = selectedTypes.filter(id => id !== typeId);
-    }
-    else {
+    } else {
       newSelectedTypes = [...selectedTypes, typeId];
     }
     
     setSelectedTypes(newSelectedTypes);
     
-    setParams(prev => {
-      const newParams = { ...prev, page: 1 };
-      
-      if (newSelectedTypes.length === 0) {
-        delete newParams.types;
-      } else {
-        newParams.types = newSelectedTypes;
-      }
-      
-      return newParams;
-    });
+    let newParams = { ...params, page: 1 };
     
+    if (newSelectedTypes.length === 0) {
+      delete newParams.types;
+    } else {
+      newParams.types = newSelectedTypes;
+    }
+    
+    setParams(newParams);
     setHasMore(newSelectedTypes.length === 0);
+    
+    onListStateChange({
+      selectedTypes: newSelectedTypes,
+      params: newParams
+    });
   };
 
   const buildUrl = (params: FetchParams) => {
@@ -150,7 +173,8 @@ const Main: React.FC<MainProps> = ({ onPokemonSelect }) => {
         }
         const data = await response.json();
         setTypes(data);
-      } catch (err) {
+      }
+      catch (err) {
         console.error('Erreur lors du chargement des types:', err);
       }
     };
