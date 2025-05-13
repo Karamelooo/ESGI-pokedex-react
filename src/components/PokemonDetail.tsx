@@ -26,6 +26,7 @@ interface Pokemon {
   evolutions?: {
     name: string;
     pokedexId: number;
+    sprite: string;
   }[];
 }
 
@@ -94,7 +95,10 @@ const PokemonDetail: React.FC<PokemonDetailProps> = ({ pokemonId, onBack, onEvol
       
       <div className="pokemon-detail-card">
         <div className="pokemon-detail-header">
-          <img src={pokemon.image} alt={pokemon.name} className="pokemon-detail-image" />
+          <div className="pokemon-image-container">
+            <img src={pokemon.image} alt={pokemon.name} className="pokemon-detail-image" />
+            <img src={pokemon.sprite} alt={`Sprite de ${pokemon.name}`} className="pokemon-sprite" />
+          </div>
           <div className="pokemon-detail-info">
             <h1 className="pokemon-detail-name">{pokemon.name}</h1>
             <h2 className="pokemon-detail-id">#{pokemon.pokedexId}</h2>
@@ -119,6 +123,11 @@ const PokemonDetail: React.FC<PokemonDetailProps> = ({ pokemonId, onBack, onEvol
                   className="evolution-item"
                   onClick={() => handleEvolutionClick(evolution.name, evolution.pokedexId)}
                 >
+                  <img 
+                    src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${evolution.pokedexId}.png`}
+                    alt={evolution.name} 
+                    className="evolution-sprite"
+                  />
                   <span>{evolution.name}</span>
                   <span className="evolution-id">#{evolution.pokedexId}</span>
                 </div>

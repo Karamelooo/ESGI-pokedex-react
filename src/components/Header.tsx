@@ -5,7 +5,7 @@ const Header: React.FC = () => {
   return (
     <header className="header">
       <div className="container">
-        <h1>Pokédex</h1>
+        <h1><a href="/">Pokédex</a></h1>
         <nav>
         </nav>
       </div>

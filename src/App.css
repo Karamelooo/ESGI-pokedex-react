@@ -47,6 +47,15 @@
   font-size: 2rem;
 }
 
+h1 a {
+  text-decoration: none;
+  color: white;
+}
+
+h1 a:hover {
+  color: #f0f0f0;
+}
+
 .header .container {
   display: flex;
   justify-content: space-between;
@@ -100,9 +109,8 @@
   justify-content: center;
 }
 .pokemonContainer > div {
-  flex-basis: 10%;
+  flex-basis: 7%;
   gap:1rem;
-  border: 1px solid #000;
   background-color: #fff;
   border-radius: 15px;
   padding: 1rem;
