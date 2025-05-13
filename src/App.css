@@ -163,21 +163,34 @@
   width: 100%;
 }
 
-.search-container {
+.filters-container {
   margin: 0 auto 2rem;
   width: 100%;
-  max-width: 600px;
+  max-width: 900px;
   padding: 0 1rem;
 }
 
+.search-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rem;
+  margin-bottom: 1rem;
+}
+
+.search-input-wrapper {
+  flex: 1;
+  min-width: 250px;
+  position: relative;
+}
+
 .search-input {
-  color:black;
   width: 100%;
-  padding: 0.8rem 1.2rem;
+  padding: 0.8rem 1.2rem 0.8rem 2.5rem;
   font-size: 1rem;
   border: 2px solid #ddd;
   border-radius: 2rem;
   background-color: white;
+  color: #333;
   transition: all 0.3s ease;
   outline: none;
 }
@@ -185,6 +198,68 @@
 .search-input:focus {
   border-color: #e3350d;
   box-shadow: 0 0 0 2px rgba(227, 53, 13, 0.2);
+}
+
+.search-input::placeholder {
+  color: #aaa;
+}
+
+.search-input-wrapper::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: contain;
+  pointer-events: none;
+}
+
+.type-filter {
+  width: 200px;
+}
+
+.type-select {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  font-size: 1rem;
+  border: 2px solid #ddd;
+  border-radius: 2rem;
+  background-color: white;
+  color: #333;
+  transition: all 0.3s ease;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1em;
+}
+
+.type-select:focus {
+  border-color: #e3350d;
+  box-shadow: 0 0 0 2px rgba(227, 53, 13, 0.2);
+}
+
+.search-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 1rem;
+}
+
+.search-info span {
+  background-color: #f5f5f5;
+  padding: 0.3rem 0.8rem;
+  border-radius: 1rem;
+  border: 1px solid #ddd;
 }
 
 .no-results {

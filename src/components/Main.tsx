@@ -11,6 +11,12 @@ interface Pokemon {
   }[];
 }
 
+interface PokemonType {
+  id: number;
+  name: string;
+  image: string;
+}
+
 interface FetchParams {
   page: number;
   limit: number;
@@ -21,9 +27,11 @@ interface FetchParams {
 
 const Main: React.FC = () => {
   const [pokemons, setPokemons] = useState<Pokemon[]>([]);
+  const [types, setTypes] = useState<PokemonType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchName, setSearchName] = useState('');
+  const [selectedType, setSelectedType] = useState<number | ''>('');
   const [params, setParams] = useState<FetchParams>({
     page: 1,
     limit: 50
@@ -33,7 +41,8 @@ const Main: React.FC = () => {
   const searchTimeout = useRef<number | null>(null);
   
   const isSearchMode = () => {
-    return params.name !== undefined && params.name !== '';
+    return (params.name !== undefined && params.name !== '') || 
+           (params.typeId !== undefined);
   };
   
   const lastPokemonRef = useCallback((node: HTMLDivElement) => {
@@ -48,7 +57,7 @@ const Main: React.FC = () => {
     });
     
     if (node) observer.current.observe(node);
-  }, [loading, hasMore, params.name]);
+  }, [loading, hasMore, params.name, params.typeId]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -77,6 +86,25 @@ const Main: React.FC = () => {
     }, 500);
   };
 
+  const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setSelectedType(value === '' ? '' : parseInt(value));
+    
+    setParams(prev => {
+      const newParams = { ...prev, page: 1 };
+      
+      if (value === '') {
+        delete newParams.typeId;
+      } else {
+        newParams.typeId = parseInt(value);
+      }
+      
+      return newParams;
+    });
+    
+    setHasMore(value === '');
+  };
+
   const buildUrl = (params: FetchParams) => {
     const url = new URL('https://nestjs-pokedex-api.vercel.app/pokemons');
     
@@ -99,6 +127,23 @@ const Main: React.FC = () => {
     
     return url.toString();
   };
+
+  useEffect(() => {
+    const fetchTypes = async () => {
+      try {
+        const response = await fetch('https://nestjs-pokedex-api.vercel.app/types');
+        if (!response.ok) {
+          throw new Error('Erreur lors du chargement des types');
+        }
+        const data = await response.json();
+        setTypes(data);
+      } catch (err) {
+        console.error('Erreur lors du chargement des types:', err);
+      }
+    };
+
+    fetchTypes();
+  }, []);
 
   useEffect(() => {
     const fetchPokemons = async () => {
@@ -135,19 +180,40 @@ const Main: React.FC = () => {
 
   return (
     <div className="pokedexContainer">
-      <div className="search-container">
-        <div className="search-input-wrapper">
-          <input
-            type="text"
-            placeholder="Rechercher un Pokémon..."
-            value={searchName}
-            onChange={handleSearchChange}
-            className="search-input"
-          />
+      <div className="filters-container">
+        <div className="search-container">
+          <div className="search-input-wrapper">
+            <input
+              type="text"
+              placeholder="Rechercher un Pokémon..."
+              value={searchName}
+              onChange={handleSearchChange}
+              className="search-input"
+            />
+          </div>
+          
+          <div className="type-filter">
+            <select 
+              value={selectedType} 
+              onChange={handleTypeChange}
+              className="type-select"
+            >
+              <option value="">Tous les types</option>
+              {types.map(type => (
+                <option key={type.id} value={type.id}>
+                  {type.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
+        
         {isSearchMode() && (
           <div className="search-info">
-            Résultats pour "{params.name}"
+            {params.name && <span>Nom : {params.name}</span>}
+            {params.typeId && types.length > 0 && (
+              <span>Type : {types.find(t => t.id === params.typeId)?.name}</span>
+            )}
           </div>
         )}
       </div>
