@@ -32,9 +32,10 @@ interface Pokemon {
 interface PokemonDetailProps {
   pokemonId: number;
   onBack: () => void;
+  onEvolutionSelect: (id: number) => void;
 }
 
-const PokemonDetail: React.FC<PokemonDetailProps> = ({ pokemonId, onBack }) => {
+const PokemonDetail: React.FC<PokemonDetailProps> = ({ pokemonId, onBack, onEvolutionSelect }) => {
   const [pokemon, setPokemon] = useState<Pokemon | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,8 +60,26 @@ const PokemonDetail: React.FC<PokemonDetailProps> = ({ pokemonId, onBack }) => {
     fetchPokemonDetail();
   }, [pokemonId]);
 
+  const handleEvolutionClick = async (evolutionName: string, pokedexId: number) => {
+    try {
+      const response = await fetch(`https://nestjs-pokedex-api.vercel.app/pokemons/${pokedexId}`);
+      if (!response.ok) {
+        throw new Error(`Erreur lors de la recherche de ${evolutionName}`);
+      }
+      
+      const data = await response.json();
+      if (data) {
+        onEvolutionSelect(data.id);
+      } else {
+        console.error(`Aucun Pokémon trouvé avec le nom: ${evolutionName}`);
+      }
+    } catch (err) {
+      console.error('Erreur lors de la recherche de l\'évolution:', err);
+    }
+  };
+
   if (loading) return <div className="loading">Chargement...</div>;
-  if (error) return <div className="error">Erreur: {error}</div>;
+  if (error) return <div className="error">Erreur : {error}</div>;
   if (!pokemon) return <div className="no-data">Aucune donnée disponible</div>;
 
   return (
@@ -75,7 +94,7 @@ const PokemonDetail: React.FC<PokemonDetailProps> = ({ pokemonId, onBack }) => {
           <div className="pokemon-detail-info">
             <h1 className="pokemon-detail-name">{pokemon.name}</h1>
             <h2 className="pokemon-detail-id">#{pokemon.pokedexId}</h2>
-            <h3 className="pokemon-detail-generation">Génération: {pokemon.generation}</h3>
+            <h3 className="pokemon-detail-generation">Génération : {pokemon.generation}</h3>
             <div className="pokemon-detail-types">
               {pokemon.types.map(type => (
                 <div key={type.id} className="pokemon-type">
@@ -91,7 +110,11 @@ const PokemonDetail: React.FC<PokemonDetailProps> = ({ pokemonId, onBack }) => {
             <h3>Évolutions</h3>
             <div className="evolutions-list">
               {pokemon.evolutions.map(evolution => (
-                <div key={evolution.pokedexId} className="evolution-item">
+                <div 
+                  key={evolution.pokedexId} 
+                  className="evolution-item"
+                  onClick={() => handleEvolutionClick(evolution.name, evolution.pokedexId)}
+                >
                   <span>{evolution.name}</span>
                   <span className="evolution-id">#{evolution.pokedexId}</span>
                 </div>

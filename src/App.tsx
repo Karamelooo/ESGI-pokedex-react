@@ -21,7 +21,8 @@ function App() {
       {selectedPokemonId ? (
         <PokemonDetail 
           pokemonId={selectedPokemonId} 
-          onBack={handleBackToList} 
+          onBack={handleBackToList}
+          onEvolutionSelect={handlePokemonSelect}
         />
       ) : (
         <Main onPokemonSelect={handlePokemonSelect} />
